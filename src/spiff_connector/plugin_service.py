@@ -2,8 +2,7 @@ import importlib
 import inspect
 import pkgutil
 import types
-
-from flask import typing
+import typing
 
 
 class PluginService:
