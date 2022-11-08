@@ -1,5 +1,6 @@
 # spiff-connector
-A Flask Blueprint to connect SpiffWorkflow Service Tasks to your organizations APIs 
+<<<<<<< HEAD
+A Flask Blueprint to connect SpiffWorkflow Service Tasks to your organization's APIs. Use this as a library in your connector application.
 
 ## Api Endpoints
 Adds the following API endpoints:
@@ -24,7 +25,5 @@ In addition to the base commands which can use secrets from a config file or the
 | /v1/auths | list all the available authentication schemes |
 | /v1/auths/{plugin}/{auth} | Execute the authentication process |
 | /v1/auths/{plugin}/{auth}/callback | Redirects back from an Oath call |
-
-
 
 
