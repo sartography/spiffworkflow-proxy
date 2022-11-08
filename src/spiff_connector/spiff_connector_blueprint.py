@@ -9,7 +9,7 @@ from flask import session
 from flask import url_for
 from flask_oauthlib.contrib.client import OAuth
 
-from plugin_service import PluginService
+from spiff_connector.plugin_service import PluginService
 
 spiff_connector_blueprint = Blueprint('spiff_connector_blueprint', __name__)
 
