@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "connector-example"
+version = "0.1.0"
+description = "Connectors allow you make internal services and APIs available to Service Tasks in SpiffWorkflow.  This is a template for building you own services."
+authors = ["Dan <daniel.h.funk@gmail.com>"]
+license = "GNU LESSER GENERAL PUBLIC LICENSE v2.1"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

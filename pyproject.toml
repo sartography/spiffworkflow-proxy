@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "spiff-connector"
+version = "0.1.0"
+description = "A blueprint that can allow (and limit) SpiffWorkflow's Service Tasks access to an organizations API's, such as connections to AWS Services and existing applications."
+authors = ["Dan <dan@sartography.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.2"
+Flask-OAuthlib = "^0.9.6"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+connector-example = {path = "tests/mock_connectors/connector-example", develop = true}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
