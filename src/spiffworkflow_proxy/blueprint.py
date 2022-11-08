@@ -9,28 +9,27 @@ from flask import session
 from flask import url_for
 from flask_oauthlib.contrib.client import OAuth
 
-from spiff_connector.plugin_service import PluginService
+from spiffworkflow_proxy.plugin_service import PluginService
+proxy_blueprint = Blueprint('proxy_blueprint', __name__)
 
-spiff_connector_blueprint = Blueprint('spiff_connector_blueprint', __name__)
 
-
-@spiff_connector_blueprint.route('/')
+@proxy_blueprint.route('/')
 def index():
     return "This is the SpiffWorkflow Connector.   Point SpiffWorkfow-backend configuration to this url." \
            " Please see /v1/commands for a list of commands this connector proxy will allow."
 
 
-@spiff_connector_blueprint.route("/liveness")
+@proxy_blueprint.route("/liveness")
 def status():
     return Response(json.dumps({"ok": True}), status=200, mimetype="application/json")
 
 
-@spiff_connector_blueprint.route("/v1/commands")
+@proxy_blueprint.route("/v1/commands")
 def list_commands():
     return list_targets(PluginService.available_commands_by_plugin())
 
 
-@spiff_connector_blueprint.route("/v1/do/<plugin_display_name>/<command_name>", methods=["GET", "POST"])
+@proxy_blueprint.route("/v1/do/<plugin_display_name>/<command_name>", methods=["GET", "POST"])
 def do_command(plugin_display_name, command_name):
     command = PluginService.command_named(plugin_display_name, command_name)
     if command is None:
@@ -52,12 +51,12 @@ def do_command(plugin_display_name, command_name):
     return Response(result["response"], mimetype=result["mimetype"], status=200)
 
 
-@spiff_connector_blueprint.route("/v1/auths")
+@proxy_blueprint.route("/v1/auths")
 def list_auths():
     return list_targets(PluginService.available_auths_by_plugin())
 
 
-@spiff_connector_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>")
+@proxy_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>")
 def do_auth(plugin_display_name, auth_name):
     params = request.args.to_dict()
     our_redirect_url = params["redirect_url"]
@@ -81,7 +80,7 @@ def do_auth(plugin_display_name, auth_name):
     return handler.authorize(callback_uri=oauth_redirect_url)
 
 
-@spiff_connector_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>/callback")
+@proxy_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>/callback")
 def auth_callback(plugin_display_name, auth_name):
     handler = auth_handler(plugin_display_name, auth_name, session)
     if handler is None:

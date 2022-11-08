@@ -3,11 +3,10 @@ import sys
 
 from flask import Flask
 
-from spiff_connector.plugin_service import PluginService
+from spiffworkflow_proxy.plugin_service import PluginService
 
 """Connector_example is a Dev dependency and should be picked
 up by these tests. """
-
 
 def test_find_dependencies():
     assert(list(PluginService.available_plugins().keys()) == ['connector_example'])

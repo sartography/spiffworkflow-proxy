@@ -1,11 +1,11 @@
 import json
 
 from flask import Flask
-from spiff_connector.spiff_connector_blueprint import spiff_connector_blueprint
+from spiffworkflow_proxy.blueprint import proxy_blueprint
 
 def web_client():
     app = Flask(__name__)
-    app.register_blueprint(spiff_connector_blueprint)
+    app.register_blueprint(proxy_blueprint)
     web = app.test_client()
     return web
 
