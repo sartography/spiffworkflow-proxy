@@ -72,7 +72,7 @@ def do_auth(plugin_display_name, auth_name):
     session["client_secret"] = current_app.config["XERO_CLIENT_SECRET"]
 
     oauth_redirect_url = url_for(
-        "auth_callback",
+        "proxy_blueprint.auth_callback",
         plugin_display_name=plugin_display_name,
         auth_name=auth_name,
         _external=True,
