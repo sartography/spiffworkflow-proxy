@@ -47,8 +47,11 @@ def do_command(plugin_display_name, command_name):
             f"Error encountered when executing {plugin_display_name}:{command_name} {str(e)}",
             status=404,
         )
-
-    return Response(result["response"], mimetype=result["mimetype"], status=200)
+    if 'status' in result:
+        status_code = int(result['status'])
+    else:
+        status_code = 200
+    return Response(result["response"], mimetype=result["mimetype"], status=status_code)
 
 
 @proxy_blueprint.route("/v1/auths")
