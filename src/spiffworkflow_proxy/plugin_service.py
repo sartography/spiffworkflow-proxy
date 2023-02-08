@@ -84,7 +84,7 @@ class PluginService:
             if ispkg and name == package_name:
                 sub_pkg = finder.find_module(name).load_module(name)
                 yield from PluginService.modules_for_plugin_in_package(sub_pkg, None)
-            else:
+            elif package_name is None:
                 spec = finder.find_spec(name)
                 if spec is not None and spec.loader is not None:
                     module = types.ModuleType(spec.name)
