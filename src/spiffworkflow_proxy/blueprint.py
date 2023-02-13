@@ -51,6 +51,10 @@ def do_command(plugin_display_name, command_name):
         status_code = int(result['status'])
     else:
         status_code = 200
+    if isinstance(result["response"], dict):
+        response = json.dumps(result["response"])
+    else:
+        response = result["response"]
     return Response(result["response"], mimetype=result["mimetype"], status=status_code)
 
 
