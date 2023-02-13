@@ -55,7 +55,7 @@ def do_command(plugin_display_name, command_name):
         response = json.dumps(result["response"])
     else:
         response = result["response"]
-    return Response(result["response"], mimetype=result["mimetype"], status=status_code)
+    return Response(response, mimetype=result["mimetype"], status=status_code)
 
 
 @proxy_blueprint.route("/v1/auths")
