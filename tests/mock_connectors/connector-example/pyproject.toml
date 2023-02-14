@@ -7,7 +7,7 @@ license = "GNU LESSER GENERAL PUBLIC LICENSE v2.1"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 
 
 [build-system]
