@@ -75,8 +75,8 @@ def do_auth(plugin_display_name, auth_name):
 
     # TODO factor into handler
     # TODO namespace the keys
-    session["client_id"] = current_app.config["XERO_CLIENT_ID"]
-    session["client_secret"] = current_app.config["XERO_CLIENT_SECRET"]
+    session["client_id"] = current_app.config["CONNECTOR_PROXY_XERO_CLIENT_ID"]
+    session["client_secret"] = current_app.config["CONNECTOR_PROXY_XERO_CLIENT_SECRET"]
 
     oauth_redirect_url = url_for(
         "proxy_blueprint.auth_callback",
