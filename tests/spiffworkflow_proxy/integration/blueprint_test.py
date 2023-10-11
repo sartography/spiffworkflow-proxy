@@ -1,7 +1,7 @@
 import json
 
 from flask import Flask
-from flask import FlaskClient
+from flask.testing import FlaskClient
 from spiffworkflow_proxy.blueprint import proxy_blueprint
 
 
