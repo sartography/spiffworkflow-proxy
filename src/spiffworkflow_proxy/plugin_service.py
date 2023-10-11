@@ -3,6 +3,9 @@ import inspect
 import pkgutil
 import types
 import typing
+from collections.abc import Generator
+from inspect import Parameter
+from typing import Any
 
 
 class PluginService:
@@ -14,15 +17,15 @@ class PluginService:
     PLUGIN_PREFIX: str = "connector_"
 
     @staticmethod
-    def plugin_display_name(plugin_name):
+    def plugin_display_name(plugin_name: str) -> str:
         return plugin_name.removeprefix(PluginService.PLUGIN_PREFIX)
 
     @staticmethod
-    def plugin_name_from_display_name(plugin_display_name):
+    def plugin_name_from_display_name(plugin_display_name: str) -> str:
         return PluginService.PLUGIN_PREFIX + plugin_display_name
 
     @staticmethod
-    def available_plugins():
+    def available_plugins() -> dict[str, types.ModuleType]:
         return {
             name: importlib.import_module(name)
             for finder, name, ispkg in pkgutil.iter_modules()
@@ -30,36 +33,30 @@ class PluginService:
         }
 
     @staticmethod
-    def available_auths_by_plugin():
+    def available_auths_by_plugin() -> dict[str, dict[str, type]]:
         return {
-            plugin_name: {
-                auth_name: auth
-                for auth_name, auth in PluginService.auths_for_plugin(
+            plugin_name: dict(PluginService.auths_for_plugin(
                     plugin_name, plugin
-                )
-            }
+                ))
             for plugin_name, plugin in PluginService.available_plugins().items()
         }
 
     @staticmethod
-    def available_commands_by_plugin():
+    def available_commands_by_plugin() -> dict[str, dict[str, type]]:
         return {
-            plugin_name: {
-                command_name: command
-                for command_name, command in PluginService.commands_for_plugin(
+            plugin_name: dict(PluginService.commands_for_plugin(
                     plugin_name, plugin
-                )
-            }
+                ))
             for plugin_name, plugin in PluginService.available_plugins().items()
         }
 
     @staticmethod
-    def target_id(plugin_name, target_name):
+    def target_id(plugin_name: str, target_name: str) -> str:
         plugin_display_name = PluginService.plugin_display_name(plugin_name)
         return f"{plugin_display_name}/{target_name}"
 
     @staticmethod
-    def auth_named(plugin_display_name, auth_name):
+    def auth_named(plugin_display_name: str, auth_name: str) -> type | None:
         plugin_name = PluginService.plugin_name_from_display_name(plugin_display_name)
         available_auths_by_plugin = PluginService.available_auths_by_plugin()
 
@@ -69,7 +66,7 @@ class PluginService:
             return None
 
     @staticmethod
-    def command_named(plugin_display_name, command_name):
+    def command_named(plugin_display_name: str, command_name: str) -> type | None:
         plugin_name = PluginService.plugin_name_from_display_name(plugin_display_name)
         available_commands_by_plugin = PluginService.available_commands_by_plugin()
 
@@ -79,20 +76,26 @@ class PluginService:
             return None
 
     @staticmethod
-    def modules_for_plugin_in_package(plugin, package_name):
+    def modules_for_plugin_in_package(
+        plugin: types.ModuleType, package_name: str | None
+    ) -> Generator[tuple[str, types.ModuleType], None, None]:
         for finder, name, ispkg in pkgutil.iter_modules(plugin.__path__):
             if ispkg and name == package_name:
-                sub_pkg = finder.find_module(name).load_module(name)
-                yield from PluginService.modules_for_plugin_in_package(sub_pkg, None)
+                found_module = finder.find_module(name)  # type: ignore
+                if found_module is not None:
+                    sub_pkg = found_module.load_module(name)
+                    yield from PluginService.modules_for_plugin_in_package(sub_pkg, None)
             elif package_name is None:
-                spec = finder.find_spec(name)
+                spec = finder.find_spec(name)  # type: ignore
                 if spec is not None and spec.loader is not None:
                     module = types.ModuleType(spec.name)
                     spec.loader.exec_module(module)
                     yield name, module
 
     @staticmethod
-    def targets_for_plugin(plugin_name, plugin, target_package_name):
+    def targets_for_plugin(
+        plugin_name: str, plugin: types.ModuleType, target_package_name: str
+    ) -> Generator[tuple[str, type], None, None]:
         for module_name, module in PluginService.modules_for_plugin_in_package(
                 plugin, target_package_name
         ):
@@ -101,16 +104,16 @@ class PluginService:
                     yield member_name, member
 
     @staticmethod
-    def auths_for_plugin(plugin_name, plugin):
+    def auths_for_plugin(plugin_name: str, plugin: types.ModuleType) -> Generator[tuple[str, type], None, None]:
         yield from PluginService.targets_for_plugin(plugin_name, plugin, "auths")
 
     @staticmethod
-    def commands_for_plugin(plugin_name, plugin):
+    def commands_for_plugin(plugin_name: str, plugin: types.ModuleType) -> Generator[tuple[str, type], None, None]:
         # TODO check if class has an execute method before yielding
         yield from PluginService.targets_for_plugin(plugin_name, plugin, "commands")
 
     @staticmethod
-    def param_annotation_desc(param):
+    def param_annotation_desc(param: Parameter) -> dict:
         """Parses a callable parameter's type annotation, if any, to form a ParameterDescription."""
         param_id = param.name
         param_type_desc = "any"
@@ -129,12 +132,7 @@ class PluginService:
             # get_args normalizes Optional[str] to (str, none)
             # all unsupported types are marked so (str, dict) -> (str, unsupported)
             # the absense of a type annotation results in an empty set
-            annotation_types = set(
-                map(
-                    lambda t: t if t in supported_types else unsupported_type_marker,
-                    typing.get_args(annotation),
-                )
-            )
+            annotation_types = {t if t in supported_types else unsupported_type_marker for t in typing.get_args(annotation)}
 
         # a parameter is required if it has no default value and none is not in its type set
         param_req = param.default is param.empty and none_type not in annotation_types
@@ -152,7 +150,7 @@ class PluginService:
         return {"id": param_id, "type": param_type_desc, "required": param_req}
 
     @staticmethod
-    def callable_params_desc(kallable):
+    def callable_params_desc(kallable: Any) -> list[dict]:
         sig = inspect.signature(kallable)
         params_to_skip = ["self", "kwargs"]
         sig_params = filter(
@@ -163,7 +161,7 @@ class PluginService:
         return params
 
     @staticmethod
-    def describe_target(plugin_name, target_name, target):
-        parameters = PluginService.callable_params_desc(target.__init__)
+    def describe_target(plugin_name: str, target_name: str, target: type) -> dict:
+        parameters = PluginService.callable_params_desc(target.__init__)  # type: ignore
         target_id = PluginService.target_id(plugin_name, target_name)
         return {"id": target_id, "parameters": parameters}

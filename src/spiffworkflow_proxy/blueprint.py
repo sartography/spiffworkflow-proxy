@@ -1,43 +1,47 @@
-from flask import Blueprint, current_app
 import json
 import re
+import typing
+from typing import Any
 
+from flask import Blueprint
+from flask import Response
+from flask import current_app
 from flask import redirect
 from flask import request
-from flask import Response
 from flask import session
 from flask import url_for
-from flask_oauthlib.contrib.client import OAuth
+from flask_oauthlib.contrib.client import OAuth  # type: ignore
 
 from spiffworkflow_proxy.plugin_service import PluginService
+
 proxy_blueprint = Blueprint('proxy_blueprint', __name__)
 
 
 @proxy_blueprint.route('/')
-def index():
+def index() -> str:
     return "This is the SpiffWorkflow Connector.   Point SpiffWorkfow-backend configuration to this url." \
            " Please see /v1/commands for a list of commands this connector proxy will allow."
 
 
 @proxy_blueprint.route("/liveness")
-def status():
+def status() -> Response:
     return Response(json.dumps({"ok": True}), status=200, mimetype="application/json")
 
 
 @proxy_blueprint.route("/v1/commands")
-def list_commands():
+def list_commands() -> Response:
     return list_targets(PluginService.available_commands_by_plugin())
 
 
 @proxy_blueprint.route("/v1/do/<plugin_display_name>/<command_name>", methods=["GET", "POST"])
-def do_command(plugin_display_name, command_name):
+def do_command(plugin_display_name: str, command_name: str) -> Response:
     command = PluginService.command_named(plugin_display_name, command_name)
     if command is None:
         return json_error_response(
             f"Command not found: {plugin_display_name}:{command_name}", status=404
         )
 
-    params = request.json
+    params = typing.cast(dict, request.json)
     task_data = params.pop('spiff__task_data', '{}')
 
     try:
@@ -59,17 +63,17 @@ def do_command(plugin_display_name, command_name):
 
 
 @proxy_blueprint.route("/v1/auths")
-def list_auths():
+def list_auths() -> Response:
     return list_targets(PluginService.available_auths_by_plugin())
 
 
 @proxy_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>")
-def do_auth(plugin_display_name, auth_name):
+def do_auth(plugin_display_name: str, auth_name: str) -> Any:
     params = request.args.to_dict()
     our_redirect_url = params["redirect_url"]
     session["redirect_url"] = our_redirect_url
 
-    handler = auth_handler(plugin_display_name, auth_name, params)
+    handler = auth_handler(plugin_display_name, auth_name)
     if handler is None:
         return Response("Auth not found", status=404)
 
@@ -88,8 +92,8 @@ def do_auth(plugin_display_name, auth_name):
 
 
 @proxy_blueprint.route("/v1/auth/<plugin_display_name>/<auth_name>/callback")
-def auth_callback(plugin_display_name, auth_name):
-    handler = auth_handler(plugin_display_name, auth_name, session)
+def auth_callback(plugin_display_name: str, auth_name: str) -> Response:
+    handler = auth_handler(plugin_display_name, auth_name)
     if handler is None:
         return Response("Auth not found", status=404)
 
@@ -102,10 +106,10 @@ def auth_callback(plugin_display_name, auth_name):
     if re.match(r".*\?.*", redirect_url):
         redirect_url_params_symbol = "&"
 
-    return redirect(f"{redirect_url}{redirect_url_params_symbol}response={response}")
+    return redirect(f"{redirect_url}{redirect_url_params_symbol}response={response}")  # type: ignore
 
 
-def list_targets(targets):
+def list_targets(targets: dict[str, dict[str, type]]) -> Response:
     descriptions = []
 
     for plugin_name, plugin_targets in targets.items():
@@ -118,7 +122,7 @@ def list_targets(targets):
     return Response(json.dumps(descriptions), status=200, mimetype="application/json")
 
 
-def auth_handler(plugin_display_name, auth_name, params):
+def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
     auth = PluginService.auth_named(plugin_display_name, auth_name)
     if auth is not None:
         app_description = auth().app_description(current_app.config)
@@ -127,18 +131,18 @@ def auth_handler(plugin_display_name, auth_name, params):
         # would need to expand if other auth providers are used
         handler = OAuth(current_app).remote_app(**app_description)
 
-        @handler.tokengetter
-        def tokengetter():
+        @handler.tokengetter  # type: ignore
+        def tokengetter() -> None:
             pass
 
-        @handler.tokensaver
-        def tokensaver(token):
+        @handler.tokensaver  # type: ignore
+        def tokensaver(token: str) -> None:
             pass
 
         return handler
 
 
-def json_error_response(message, status):
+def json_error_response(message: str, status: int) -> Response:
     resp = {"error": message, "status": status}
     return Response(json.dumps(resp), status=status)
 

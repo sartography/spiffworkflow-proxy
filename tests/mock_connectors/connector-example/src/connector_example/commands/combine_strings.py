@@ -1,6 +1,5 @@
 """Simple Example Command."""
-import json
-from decimal import Decimal
+from typing import Any
 
 
 class CombineStrings:
@@ -17,7 +16,7 @@ class CombineStrings:
         self.arg1 = arg1
         self.arg2 = arg2
 
-    def execute(self, config, task_data):
+    def execute(self, config: Any, task_data: Any) -> Any:
         """Execute."""
         # Get the service resource.
         return self.arg1 + self.arg2
