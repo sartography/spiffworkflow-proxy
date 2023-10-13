@@ -7,6 +7,8 @@ from collections.abc import Generator
 from inspect import Parameter
 from typing import Any
 
+from spiffworkflow_connector_command.command_interface import ConnectorCommand
+
 
 class PluginService:
     """
@@ -33,7 +35,7 @@ class PluginService:
         }
 
     @staticmethod
-    def available_auths_by_plugin() -> dict[str, dict[str, type]]:
+    def available_auths_by_plugin() -> dict[str, dict[str, type[ConnectorCommand]]]:
         return {
             plugin_name: dict(PluginService.auths_for_plugin(
                     plugin_name, plugin
@@ -42,7 +44,7 @@ class PluginService:
         }
 
     @staticmethod
-    def available_commands_by_plugin() -> dict[str, dict[str, type]]:
+    def available_commands_by_plugin() -> dict[str, dict[str, type[ConnectorCommand]]]:
         return {
             plugin_name: dict(PluginService.commands_for_plugin(
                     plugin_name, plugin
@@ -56,7 +58,7 @@ class PluginService:
         return f"{plugin_display_name}/{target_name}"
 
     @staticmethod
-    def auth_named(plugin_display_name: str, auth_name: str) -> type | None:
+    def auth_named(plugin_display_name: str, auth_name: str) -> type[ConnectorCommand] | None:
         plugin_name = PluginService.plugin_name_from_display_name(plugin_display_name)
         available_auths_by_plugin = PluginService.available_auths_by_plugin()
 
@@ -66,7 +68,7 @@ class PluginService:
             return None
 
     @staticmethod
-    def command_named(plugin_display_name: str, command_name: str) -> type | None:
+    def command_named(plugin_display_name: str, command_name: str) -> type[ConnectorCommand] | None:
         plugin_name = PluginService.plugin_name_from_display_name(plugin_display_name)
         available_commands_by_plugin = PluginService.available_commands_by_plugin()
 
@@ -95,21 +97,23 @@ class PluginService:
     @staticmethod
     def targets_for_plugin(
         plugin_name: str, plugin: types.ModuleType, target_package_name: str
-    ) -> Generator[tuple[str, type], None, None]:
+    ) -> Generator[tuple[str, type[ConnectorCommand]], None, None]:
         for module_name, module in PluginService.modules_for_plugin_in_package(
                 plugin, target_package_name
         ):
-            for member_name, member in inspect.getmembers(module, inspect.isclass):
+            # for member_name, member in inspect.getmembers(module, inspect.isclass):
+            for member_name, member in inspect.getmembers(module, PluginService.is_connector_command):
                 if member.__module__ == module_name:
                     yield member_name, member
 
     @staticmethod
-    def auths_for_plugin(plugin_name: str, plugin: types.ModuleType) -> Generator[tuple[str, type], None, None]:
+    def auths_for_plugin(plugin_name: str, plugin: types.ModuleType) -> Generator[tuple[str, type[ConnectorCommand]], None, None]:
         yield from PluginService.targets_for_plugin(plugin_name, plugin, "auths")
 
     @staticmethod
-    def commands_for_plugin(plugin_name: str, plugin: types.ModuleType) -> Generator[tuple[str, type], None, None]:
-        # TODO check if class has an execute method before yielding
+    def commands_for_plugin(
+        plugin_name: str, plugin: types.ModuleType
+    ) -> Generator[tuple[str, type[ConnectorCommand]], None, None]:
         yield from PluginService.targets_for_plugin(plugin_name, plugin, "commands")
 
     @staticmethod
@@ -165,3 +169,7 @@ class PluginService:
         parameters = PluginService.callable_params_desc(target.__init__)  # type: ignore
         target_id = PluginService.target_id(plugin_name, target_name)
         return {"id": target_id, "parameters": parameters}
+
+    @staticmethod
+    def is_connector_command(module: Any) -> bool:
+        return inspect.isclass(module) and issubclass(module, ConnectorCommand)

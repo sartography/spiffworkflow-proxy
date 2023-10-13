@@ -11,6 +11,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_oauthlib.contrib.client import OAuth  # type: ignore
+from spiffworkflow_connector_command.command_interface import CommandResponseDict
 
 from spiffworkflow_proxy.plugin_service import PluginService
 
@@ -35,10 +36,15 @@ def list_commands() -> Response:
 
 @proxy_blueprint.route("/v1/do/<plugin_display_name>/<command_name>", methods=["GET", "POST"])
 def do_command(plugin_display_name: str, command_name: str) -> Response:
+    operator_id = f"{plugin_display_name}/{command_name}"
+    # import pdb; pdb.set_trace()
     command = PluginService.command_named(plugin_display_name, command_name)
     if command is None:
         return json_error_response(
-            f"Command not found: {plugin_display_name}:{command_name}", status=404
+            message="It either does not exist or does not inherit from spiffworkflow_connector_command.",
+            error_name="command_not_found",
+            operator_id=operator_id,
+            status=404
         )
 
     params = typing.cast(dict, request.json)
@@ -48,17 +54,19 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
         result = command(**params).execute(current_app.config, task_data)
     except Exception as e:
         return json_error_response(
-            f"Error encountered when executing {plugin_display_name}:{command_name} {str(e)}",
-            status=404,
+            message=str(e),
+            error_name=e.__class__.__name__,
+            operator_id=operator_id,
+            status=500
         )
-    if 'status' in result:
-        status_code = int(result['status'])
-    else:
-        status_code = 200
-    if isinstance(result["response"], dict):
-        response = json.dumps(result["response"])
-    else:
-        response = result["response"]
+
+    status_code = int(result['status'])
+    return_response = result["response"]
+    if "operator_id" not in return_response or return_response["operator_id"] is None:
+        return_response["operator_id"] = operator_id
+    print(f"return_response: {return_response}")
+    response = json.dumps(return_response)
+    print(f"result: {result}")
     return Response(response, mimetype=result["mimetype"], status=status_code)
 
 
@@ -142,7 +150,14 @@ def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
         return handler
 
 
-def json_error_response(message: str, status: int) -> Response:
-    resp = {"error": message, "status": status}
-    return Response(json.dumps(resp), status=status)
+def json_error_response(message: str, operator_id: str, error_name: str, status: int) -> Response:
+    response: CommandResponseDict = {
+        "api_response": {},
+        "error": {
+            "message": message,
+            "error_name": error_name,
+        },
+        "operator_id": operator_id,
+    }
+    return Response(json.dumps(response), status=status)
 

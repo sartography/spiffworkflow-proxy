@@ -1,8 +1,12 @@
 """Simple Example Command."""
 from typing import Any
 
+from spiffworkflow_connector_command.command_interface import CommandResponseDict
+from spiffworkflow_connector_command.command_interface import CommandResultDict
+from spiffworkflow_connector_command.command_interface import ConnectorCommand
 
-class CombineStrings:
+
+class CombineStrings(ConnectorCommand):
     """Takes two strings, combines them together, and returns a single string! AMAZIN!."""
 
     def __init__(
@@ -16,7 +20,19 @@ class CombineStrings:
         self.arg1 = arg1
         self.arg2 = arg2
 
-    def execute(self, config: Any, task_data: Any) -> Any:
+    def execute(self, config: Any, task_data: Any) -> CommandResultDict:
         """Execute."""
-        # Get the service resource.
-        return self.arg1 + self.arg2
+
+        return_response: CommandResponseDict = {
+            "api_response": {"example_response": "whatever you want", "arg1": self.arg1, "arg2": self.arg2},
+            "spiff__logs": [],
+            "error": None,
+        }
+        result: CommandResultDict = {
+            "response": return_response,
+            "status": 200,
+            "mimetype": "application/json",
+        }
+
+        return result
+
