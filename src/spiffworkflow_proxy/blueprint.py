@@ -36,14 +36,11 @@ def list_commands() -> Response:
 
 @proxy_blueprint.route("/v1/do/<plugin_display_name>/<command_name>", methods=["GET", "POST"])
 def do_command(plugin_display_name: str, command_name: str) -> Response:
-    operator_id = f"{plugin_display_name}/{command_name}"
-    # import pdb; pdb.set_trace()
     command = PluginService.command_named(plugin_display_name, command_name)
     if command is None:
         return json_error_response(
             message="It either does not exist or does not inherit from spiffworkflow_connector_command.",
-            error_name="command_not_found",
-            operator_id=operator_id,
+            error_code="command_not_found",
             status=404
         )
 
@@ -55,18 +52,13 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
     except Exception as e:
         return json_error_response(
             message=str(e),
-            error_name=e.__class__.__name__,
-            operator_id=operator_id,
+            error_code=e.__class__.__name__,
             status=500
         )
 
     status_code = int(result['status'])
     return_response = result["response"]
-    if "operator_id" not in return_response or return_response["operator_id"] is None:
-        return_response["operator_id"] = operator_id
-    print(f"return_response: {return_response}")
     response = json.dumps(return_response)
-    print(f"result: {result}")
     return Response(response, mimetype=result["mimetype"], status=status_code)
 
 
@@ -150,14 +142,13 @@ def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
         return handler
 
 
-def json_error_response(message: str, operator_id: str, error_name: str, status: int) -> Response:
+def json_error_response(message: str, error_code: str, status: int) -> Response:
     response: ConnectorProxyResponseDict = {
         "api_response": {},
         "error": {
             "message": message,
-            "error_name": error_name,
+            "error_code": error_code,
         },
-        "operator_id": operator_id,
     }
     return Response(json.dumps(response), status=status)
 

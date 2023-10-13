@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spiffworkflow-proxy"
-version = "0.1.0"
+version = "1.0.0"
 description = "A blueprint that can allow (and limit) SpiffWorkflow's Service Tasks access to an organizations API's, such as connections to AWS Services and existing applications."
 authors = ["Dan <dan@sartography.com>"]
 readme = "README.md"
@@ -11,8 +11,8 @@ python = "^3.9"
 Flask = "^2.2"
 Flask-OAuthlib = "^0.9.6"
 
-# spiffworkflow-connector-command = {git = "https://github.com/sartography/spiffworkflow-connector-command.git", rev = "main"}
-spiffworkflow-connector-command = {develop = true, path = "../spiffworkflow-connector-command"}
+spiffworkflow-connector-command = {git = "https://github.com/sartography/spiffworkflow-connector-command.git", rev = "main"}
+# spiffworkflow-connector-command = {develop = true, path = "../spiffworkflow-connector-command"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
