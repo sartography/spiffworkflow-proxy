@@ -144,7 +144,7 @@ def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
 
 def json_error_response(message: str, error_code: str, status: int) -> Response:
     response: ConnectorProxyResponseDict = {
-        "api_response": {},
+        "command_response": {},
         "error": {
             "message": message,
             "error_code": error_code,
