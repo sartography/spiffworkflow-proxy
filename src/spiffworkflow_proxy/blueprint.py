@@ -11,6 +11,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_oauthlib.contrib.client import OAuth  # type: ignore
+from spiffworkflow_connector_command.command_interface import ConnectorProxyResponseDict
 
 from spiffworkflow_proxy.plugin_service import PluginService
 
@@ -38,7 +39,9 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
     command = PluginService.command_named(plugin_display_name, command_name)
     if command is None:
         return json_error_response(
-            f"Command not found: {plugin_display_name}:{command_name}", status=404
+            message="It either does not exist or does not inherit from spiffworkflow_connector_command.",
+            error_code="command_not_found",
+            status=404
         )
 
     params = typing.cast(dict, request.json)
@@ -48,17 +51,14 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
         result = command(**params).execute(current_app.config, task_data)
     except Exception as e:
         return json_error_response(
-            f"Error encountered when executing {plugin_display_name}:{command_name} {str(e)}",
-            status=404,
+            message=str(e),
+            error_code=e.__class__.__name__,
+            status=500
         )
-    if 'status' in result:
-        status_code = int(result['status'])
-    else:
-        status_code = 200
-    if isinstance(result["response"], dict):
-        response = json.dumps(result["response"])
-    else:
-        response = result["response"]
+
+    status_code = int(result['status'])
+    return_response = result["response"]
+    response = json.dumps(return_response)
     return Response(response, mimetype=result["mimetype"], status=status_code)
 
 
@@ -142,7 +142,13 @@ def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
         return handler
 
 
-def json_error_response(message: str, status: int) -> Response:
-    resp = {"error": message, "status": status}
-    return Response(json.dumps(resp), status=status)
+def json_error_response(message: str, error_code: str, status: int) -> Response:
+    response: ConnectorProxyResponseDict = {
+        "command_response": {},
+        "error": {
+            "message": message,
+            "error_code": error_code,
+        },
+    }
+    return Response(json.dumps(response), status=status)
 
