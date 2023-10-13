@@ -11,7 +11,7 @@ from flask import request
 from flask import session
 from flask import url_for
 from flask_oauthlib.contrib.client import OAuth  # type: ignore
-from spiffworkflow_connector_command.command_interface import CommandResponseDict
+from spiffworkflow_connector_command.command_interface import ConnectorProxyResponseDict
 
 from spiffworkflow_proxy.plugin_service import PluginService
 
@@ -151,7 +151,7 @@ def auth_handler(plugin_display_name: str, auth_name: str) -> Any:
 
 
 def json_error_response(message: str, operator_id: str, error_name: str, status: int) -> Response:
-    response: CommandResponseDict = {
+    response: ConnectorProxyResponseDict = {
         "api_response": {},
         "error": {
             "message": message,
