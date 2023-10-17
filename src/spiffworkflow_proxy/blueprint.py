@@ -56,10 +56,18 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
             status=500
         )
 
-    status_code = int(result['status'])
-    return_response = result["response"]
-    response = json.dumps(return_response)
-    return Response(response, mimetype=result["mimetype"], status=status_code)
+    if "command_response_version" in result and result["command_response_version"] > 1:  # type: ignore
+        response = json.dumps(result)
+        return Response(response, mimetype='application/json', status=200)
+    else:
+        status_code = 200
+        if 'status' in result:
+            status_code = int(result['status'])  # type: ignore
+        if isinstance(result["response"], dict):  # type: ignore
+            response = json.dumps(result["response"])  # type: ignore
+        else:
+            response = result["response"]  # type: ignore
+        return Response(response, mimetype=result["mimetype"], status=status_code)  # type: ignore
 
 
 @proxy_blueprint.route("/v1/auths")
