@@ -172,4 +172,7 @@ class PluginService:
 
     @staticmethod
     def is_connector_command(module: Any) -> bool:
-        return inspect.isclass(module) and issubclass(module, ConnectorCommand)
+        # TODO: once all known connectors are updated to use spiffworkflow-connector-command
+        # we should use this line to determine if something is a value command or not
+        # return inspect.isclass(module) and issubclass(module, ConnectorCommand)
+        return inspect.isclass(module)
