@@ -25,6 +25,11 @@ def index() -> str:
 
 
 @proxy_blueprint.route("/liveness")
+def status_deprecated() -> Response:
+    return Response(json.dumps({"ok": True}), status=200, mimetype="application/json")
+
+
+@proxy_blueprint.route("/v1/liveness")
 def status() -> Response:
     return Response(json.dumps({"ok": True}), status=200, mimetype="application/json")
 
