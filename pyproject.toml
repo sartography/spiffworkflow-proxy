@@ -18,7 +18,7 @@ spiffworkflow-connector-command = {git = "https://github.com/sartography/spiffwo
 pytest = "^7.2.0"
 connector-example = {path = "tests/mock_connectors/connector-example", develop = true}
 mypy = "^1.6.0"
-ruff = "^0.0.292"
+ruff = "^0.6.9"
 
 [build-system]
 requires = ["poetry-core"]
@@ -30,7 +30,7 @@ pythonpath = [
 ]
 
 [tool.ruff]
-select = [
+lint.select = [
   "B",   # flake8-bugbear
   "C",   # mccabe
   "E",   # pycodestyle error
@@ -44,7 +44,7 @@ select = [
   "I001" # isort
 ]
 
-ignore = [
+lint.ignore = [
   "C901",  # "complexity" category
   "PLR",  # "refactoring" category has "too many lines in method" type stuff
   "PLE1205"  # saw this Too many arguments for `logging` format string give a false positive once
@@ -59,11 +59,11 @@ exclude = [
   "migrations"
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "migrations/versions/*.py" = ["E501"]
 "tests/**/*.py" = ["PLR2004", "S101"]  # PLR2004 is about magic vars, S101 allows assert
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-single-line = true
 
 [tool.mypy]
