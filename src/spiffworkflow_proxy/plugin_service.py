@@ -77,11 +77,35 @@ class PluginService:
         except Exception:
             return None
 
+#
+# commands True connector_example.commands
+# combine_strings False connector_example.commands.combine_strings
+# some_helper False connector_example.some_helper
+#
+            
+    @staticmethod
+    def modules_for_plugin_in_package2(
+        plugin: types.ModuleType, package_name: str | None
+    ) -> Generator[tuple[str, types.ModuleType], None, None]:
+        for finder, name, ispkg in pkgutil.iter_modules(plugin.__path__):
+            print(name, ispkg, f"{plugin.__name__}.{name}")
+            imported = importlib.import_module(f"{plugin.__name__}.{name}")
+            if ispkg:
+                yield from PluginService.modules_for_plugin_in_package(imported, None)
+            else:
+                yield name, imported
+
+#
+# commands True connector_example.commands
+# combine_strings False commands.combine_strings
+#
+
     @staticmethod
     def modules_for_plugin_in_package(
         plugin: types.ModuleType, package_name: str | None
     ) -> Generator[tuple[str, types.ModuleType], None, None]:
         for finder, name, ispkg in pkgutil.iter_modules(plugin.__path__):
+            print(name, ispkg, f"{plugin.__name__}.{name}")
             if ispkg and name == package_name:
                 found_module = finder.find_module(name)  # type: ignore
                 if found_module is not None:
@@ -93,6 +117,7 @@ class PluginService:
                     module = types.ModuleType(spec.name)
                     spec.loader.exec_module(module)
                     yield name, module
+        assert False
 
     @staticmethod
     def targets_for_plugin(
