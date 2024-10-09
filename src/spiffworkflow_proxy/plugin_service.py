@@ -83,11 +83,9 @@ class PluginService:
     ) -> Generator[tuple[str, types.ModuleType], None, None]:
         for finder, name, ispkg in pkgutil.iter_modules(plugin.__path__):
             if ispkg and name == package_name:
-                found_module = finder.find_module(name)  # type: ignore
-                if found_module is not None:
-                    sub_pkg = found_module.load_module(name)
-                    yield from PluginService.modules_for_plugin_in_package(sub_pkg, None)
-            elif package_name is None:
+                sub_pkg = importlib.import_module(f"{plugin.__name__}.{name}")
+                yield from PluginService.modules_for_plugin_in_package(sub_pkg, None)
+            elif not package_name:
                 spec = finder.find_spec(name)  # type: ignore
                 if spec is not None and spec.loader is not None:
                     module = types.ModuleType(spec.name)
