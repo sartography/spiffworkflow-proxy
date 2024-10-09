@@ -3,7 +3,6 @@ from typing import Any
 
 from spiffworkflow_connector_command.command_interface import CommandResponseDict
 from spiffworkflow_connector_command.command_interface import ConnectorCommand
-from spiffworkflow_connector_command.command_interface import ConnectorProxyResponseDict
 
 
 class CombineStrings(ConnectorCommand):
@@ -22,7 +21,7 @@ class CombineStrings(ConnectorCommand):
 
     def execute(self, config: Any, task_data: Any) -> CommandResponseDict:
         """Execute."""
-        
+
         return {
             "body": {
                 "command_response": {

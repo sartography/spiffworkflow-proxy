@@ -47,7 +47,6 @@ select = [
 ignore = [
   "C901",  # "complexity" category
   "PLR",  # "refactoring" category has "too many lines in method" type stuff
-  "PLC1901",
   "PLE1205"  # saw this Too many arguments for `logging` format string give a false positive once
 ]
 

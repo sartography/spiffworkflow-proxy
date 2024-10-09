@@ -76,7 +76,7 @@ class PluginService:
             return available_commands_by_plugin[plugin_name][command_name]
         except Exception:
             return None
-            
+
     @staticmethod
     def modules_for_plugin_in_package(
         plugin: types.ModuleType, package_name: str | None
