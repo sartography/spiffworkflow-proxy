@@ -1,7 +1,7 @@
 """Simple Example Command."""
 from typing import Any
 
-from spiffworkflow_connector_command.command_interface import CommandResultDictV2
+from spiffworkflow_connector_command.command_interface import CommandResponseDict
 from spiffworkflow_connector_command.command_interface import ConnectorCommand
 from spiffworkflow_connector_command.command_interface import ConnectorProxyResponseDict
 
@@ -20,19 +20,18 @@ class CombineStrings(ConnectorCommand):
         self.arg1 = arg1
         self.arg2 = arg2
 
-    def execute(self, config: Any, task_data: Any) -> CommandResultDictV2:
+    def execute(self, config: Any, task_data: Any) -> CommandResponseDict:
         """Execute."""
-
-        return_response: ConnectorProxyResponseDict = {
-            "command_response": {"example_response": "whatever you want", "arg1": self.arg1, "arg2": self.arg2},
-            "spiff__logs": [],
-            "error": None,
-        }
-        result: CommandResultDictV2 = {
-            "response": return_response,
-            "status": 200,
+        
+        return {
+            "body": {
+                "command_response": {
+                    "example_response": "whatever you want",
+                    "arg1": self.arg1,
+                    "arg2": self.arg2
+                },
+            },
+            "http_status": 200,
             "mimetype": "application/json",
         }
-
-        return result
 
