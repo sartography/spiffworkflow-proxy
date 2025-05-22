@@ -9,7 +9,7 @@ class CombineStrings(ConnectorCommand):
     """Takes two strings, combines them together, and returns a single string! AMAZIN!."""
 
     def __init__(
-        self, arg1: str, arg2: str
+        self, arg1: str, arg2: str = "foo"
     ):
         """
         :param arg1: The First Argument

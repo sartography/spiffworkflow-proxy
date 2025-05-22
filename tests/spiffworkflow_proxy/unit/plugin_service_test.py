@@ -37,8 +37,9 @@ def test_describe_target() -> None:
             },
             {
                 "id": "arg2",
-                "required": True,
+                "required": False,
                 "type": "str",
+                "default": "foo"
             }
         ]
     }

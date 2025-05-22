@@ -149,7 +149,12 @@ class PluginService:
             if annotation_type in supported_types:
                 param_type_desc = annotation_type.__name__
 
-        return {"id": param_id, "type": param_type_desc, "required": param_req}
+        description = {"id": param_id, "type": param_type_desc, "required": param_req}
+
+        if param.default is not param.empty:
+            description["default"] = param.default
+
+        return description
 
     @staticmethod
     def callable_params_desc(kallable: Any) -> list[dict]:
