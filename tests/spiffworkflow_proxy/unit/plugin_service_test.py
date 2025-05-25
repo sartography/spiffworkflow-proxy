@@ -39,7 +39,24 @@ def test_describe_target() -> None:
                 "id": "arg2",
                 "required": False,
                 "type": "str",
-                "default": "foo"
             }
-        ]
+        ],
+        "schema": {
+            "title": "Parameters",
+            "type": "object",
+            "required": [
+                "arg1"
+            ],
+            "properties": {
+                "arg1": {
+                    "title": "arg1",
+                    "type": ["string"]
+                },
+                "arg2": {
+                    "title": "arg2",
+                    "type": ["string"],
+                    "default": "foo"
+                }
+            }
+        }
     }

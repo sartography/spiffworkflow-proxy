@@ -149,12 +149,43 @@ class PluginService:
             if annotation_type in supported_types:
                 param_type_desc = annotation_type.__name__
 
-        description = {"id": param_id, "type": param_type_desc, "required": param_req}
+        return {"id": param_id, "type": param_type_desc, "required": param_req}
+
+    @staticmethod
+    def param_schema(param: Parameter) -> dict:
+        """Parses a callable parameter's type annotation, if any, to form a ParameterSchema."""
+        schema = {
+            "title": param.name,
+        }
+
+        none_type = type(None)
+        supported_types_map = {
+            str: "string",
+            int: "integer",
+            float: "number",
+            dict: "object",
+            list: "array",
+            bool: "boolean",
+            none_type: "null",
+        } # https://json-schema.org/understanding-json-schema/reference/type
+
+        annotation = param.annotation
+
+        if annotation in supported_types_map.keys():
+            supported_annotation_types = {annotation}
+        else:
+            supported_annotation_types = {t for t in typing.get_args(annotation) if t in supported_types_map.keys()}
+
+        # only add the type keyword if at least one type is supported
+        if(len(supported_annotation_types)):
+            schema["type"] = [supported_types_map[annotation_type] for annotation_type in supported_annotation_types]
+
+        param_req = param.default is param.empty and none_type not in supported_annotation_types
 
         if param.default is not param.empty:
-            description["default"] = param.default
+            schema["default"] = param.default
 
-        return description
+        return {"schema": schema, "required": param_req}
 
     @staticmethod
     def callable_params_desc(kallable: Any) -> list[dict]:
@@ -168,10 +199,26 @@ class PluginService:
         return params
 
     @staticmethod
+    def callable_params_schema(kallable: Any) -> list[dict]:
+        sig = inspect.signature(kallable)
+        params_to_skip = ["self", "kwargs"]
+        sig_params = filter(lambda param: param.name not in params_to_skip, sig.parameters.values())
+        params = [PluginService.param_schema(param) for param in sig_params]
+        schema = {
+            "title": "Parameters",
+            "type": "object",
+            "required": [p["schema"]["title"] for p in params if p["required"]],
+            "properties": {p["schema"]["title"]: p["schema"] for p in params}
+        }
+
+        return schema
+
+    @staticmethod
     def describe_target(plugin_name: str, target_name: str, target: type) -> dict:
         parameters = PluginService.callable_params_desc(target.__init__)  # type: ignore
         target_id = PluginService.target_id(plugin_name, target_name)
-        return {"id": target_id, "parameters": parameters}
+        schema = PluginService.callable_params_schema(target.__init__)
+        return {"id": target_id, "parameters": parameters, "schema": schema}
 
     @staticmethod
     def is_connector_command(module: Any) -> bool:
