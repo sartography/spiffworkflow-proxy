@@ -23,14 +23,17 @@ class CombineStrings(ConnectorCommand):
         """Execute."""
 
         return {
-            "body": {
-                "command_response": {
-                    "example_response": "whatever you want",
-                    "arg1": self.arg1,
-                    "arg2": self.arg2
+            "command_response_version": 2,
+            "command_response": {
+                "body": {
+                    "command_response": {
+                        "example_response": "whatever you want",
+                        "arg1": self.arg1,
+                        "arg2": self.arg2,
+                    },
                 },
+                "mimetype": "application/json",
             },
-            "http_status": 200,
-            "mimetype": "application/json",
+            "error": None,
+            "spiff__logs": [],
         }
-

@@ -49,8 +49,9 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
             status=404
         )
 
-    params = typing.cast(dict, request.json)
+    params = typing.cast(dict, request.json or {})
     task_data = params.pop('spiff__task_data', '{}')
+    params = {key: value for key, value in params.items() if not key.startswith("spiff__")}
 
     try:
         result = command(**params).execute(current_app.config, task_data)
@@ -164,4 +165,3 @@ def json_error_response(message: str, error_code: str, status: int) -> Response:
         },
     }
     return Response(json.dumps(response), status=status)
-
