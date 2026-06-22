@@ -50,11 +50,18 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
         )
 
     params = typing.cast(dict, request.json or {})
+    spiff__callback_url = params.pop('spiff__callback_url', None)
     task_data = params.pop('spiff__task_data', '{}')
     params = {key: value for key, value in params.items() if not key.startswith("spiff__")}
 
     try:
-        result = command(**params).execute(current_app.config, task_data)
+        command_object = command(**params)
+        if spiff__callback_url is not None and hasattr(command_object, 'execute_async'):
+            is_async_call = True
+            result = command_object.execute_async(current_app.config, task_data, callback_url=spiff__callback_url)
+        else:
+            is_async_call = False
+            result = command_object.execute(current_app.config, task_data)
     except Exception as e:
         return json_error_response(
             message=str(e),
@@ -62,7 +69,11 @@ def do_command(plugin_display_name: str, command_name: str) -> Response:
             status=500
         )
 
-    if "command_response_version" in result and result["command_response_version"] > 1:  # type: ignore
+    if is_async_call:
+        response = json.dumps(result)
+        status_code = result.get("command_response", {}).get("http_status", 200) if isinstance(result, dict) else 200
+        return Response(response, mimetype='application/json', status=status_code)
+    elif "command_response_version" in result and result["command_response_version"] > 1:  # type: ignore
         response = json.dumps(result)
         return Response(response, mimetype='application/json', status=200)
     else:
