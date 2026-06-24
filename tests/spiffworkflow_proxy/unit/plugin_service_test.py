@@ -19,4 +19,4 @@ def test_plugin_for_display_name() -> None:
 
 def test_available_commands_by_plugin() -> None:
     commands = PluginService.available_commands_by_plugin()
-    assert(list(commands['connector_example'].keys()) == ['CombineStrings'])
+    assert(set(commands['connector_example'].keys()) == {'AsyncBodyStatus', 'CombineStrings'})
